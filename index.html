@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday My Love 💖</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt & Caveat -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for cute icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti Library for explosion effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Tone.js for custom synthesizer birthday melody (avoids blocked external audio files) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #ffeef2 0%, #fff0f5 50%, #e6e6fa 100%);
+            overflow-x: hidden;
+            user-select: none;
+        }
+        .handwritten {
+            font-family: 'Caveat', cursive;
+        }
+        /* Heart floating animation */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-80vh) rotate(360deg); opacity: 0; }
+        }
+        .heart-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: float 6s linear infinite;
+        }
+        /* Candle flame animation */
+        @keyframes flicker {
+            0%, 100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 4px #ff9d00); }
+            50% { transform: scale(1.1) rotate(3deg); filter: drop-shadow(0 0 10px #ff6a00); }
+        }
+        .flame {
+            animation: flicker 0.6s infinite alternate;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffeef2;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffb6c1;
+            border-radius: 10px;
+        }
+        /* Envelope hover animation */
+        .envelope-wrapper {
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .envelope-wrapper:hover {
+            transform: scale(1.05) rotate(1deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between">
+
+    <!-- Floating hearts container -->
+    <div id="hearts-container" class="fixed inset-0 pointer-events-none z-10 overflow-hidden"></div>
+
+    <!-- Intro Screen: Cute Envelope to unlock -->
+    <div id="intro-screen" class="fixed inset-0 z-50 bg-pink-100 flex flex-col items-center justify-center p-4 transition-all duration-1000 ease-in-out">
+        <div class="text-center mb-8 max-w-md">
+            <h1 class="text-3xl md:text-4xl font-bold text-pink-600 mb-2">จดหมายรักฉบับพิเศษ 💌</h1>
+            <p class="text-gray-600 text-sm md:text-base">ส่งตรงจากหัวใจถึงคนสำคัญที่สุดในโลก</p>
+            <p class="text-pink-400 font-medium mt-1">กดเปิดจดหมายเพื่อรับของขวัญได้เลยนะ</p>
+        </div>
+
+        <div onclick="openGift()" class="envelope-wrapper cursor-pointer bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-sm w-full text-center border-4 border-pink-200 relative overflow-hidden flex flex-col items-center justify-center">
+            <!-- Envelope Flap Graphic -->
+            <div class="w-24 h-24 bg-pink-50 rounded-full flex items-center justify-center mb-6 border-4 border-pink-300 shadow-inner relative">
+                <i class="fa-solid fa-heart text-5xl text-pink-500 animate-pulse"></i>
+            </div>
+            
+            <div class="space-y-3">
+                <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Special Delivery</p>
+                <h3 id="intro-partner-name-display" class="text-2xl font-bold text-pink-600">ถึง คุณแฟนสุดที่รัก ❤️</h3>
+                <div class="h-[2px] w-20 bg-pink-200 mx-auto"></div>
+                <p class="text-gray-500 text-sm">คลิกเปิดเพื่อสัมผัสความรักและคำอวยพรทั้งหมดกันเลย จุ้บจู๊บบ!</p>
+            </div>
+            
+            <div class="mt-6 px-6 py-2.5 bg-pink-500 text-white font-semibold rounded-full hover:bg-pink-600 transition-colors shadow-md hover:shadow-lg flex items-center gap-2">
+                <span>เปิดจดหมาย</span>
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+        </div>
+        
+        <p class="absolute bottom-6 text-xs text-pink-400">Created with ❤️ for the best partner ever</p>
+    </div>
+
+    <!-- Main Celebration Dashboard -->
+    <main id="main-content" class="hidden opacity-0 transition-opacity duration-1000 flex-grow w-full max-w-4xl mx-auto px-4 py-8 space-y-8 z-20">
+        
+        <!-- Header / Hero Card -->
+        <header class="bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-10 shadow-xl border border-pink-100 text-center relative overflow-hidden">
+            <!-- Decorative Sparkles -->
+            <div class="absolute top-4 left-4 text-pink-300 text-2xl animate-bounce"><i class="fa-solid fa-sparkles"></i></div>
+            <div class="absolute bottom-4 right-4 text-pink-300 text-2xl animate-bounce" style="animation-delay: 1s;"><i class="fa-solid fa-sparkles"></i></div>
+
+            <!-- Profile Avatar / Placeholder for Couple Picture -->
+            <div class="relative w-28 h-28 md:w-36 md:h-36 mx-auto mb-6 rounded-full border-4 border-pink-300 p-1 bg-white shadow-lg group">
+                <div class="w-full h-full rounded-full overflow-hidden bg-pink-100 flex items-center justify-center relative">
+                    <img id="partner-avatar" src="https://placehold.co/150x150/ffb6c1/ffffff?text=My+Love" alt="My Partner" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <label for="avatar-uploader" class="text-white text-xs cursor-pointer flex flex-col items-center">
+                            <i class="fa-solid fa-camera text-base mb-1"></i>
+                            เปลี่ยนรูปได้นะ
+                        </label>
+                    </div>
+                </div>
+                <input type="file" id="avatar-uploader" class="hidden" accept="image/*" onchange="uploadAvatar(event)">
+                <span class="absolute bottom-1 right-1 bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow border-2 border-white"><i class="fa-solid fa-heart"></i></span>
+            </div>
+
+            <h1 id="hero-title" class="text-3xl md:text-5xl font-extrabold text-pink-600 mb-3 tracking-wide">
+                Happy Birthday, <span id="partner-name-display-main" class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-600">สุดที่รัก</span>! 🎉
+            </h1>
+            <p id="hero-subtitle" class="text-gray-600 text-base md:text-lg max-w-lg mx-auto leading-relaxed">
+                ขอให้เธอมีความสุขที่สุดในโลก มีรอยยิ้มที่สดใสแบบนี้ในทุก ๆ วันนะคะ ขอบคุณที่เกิดมาให้รักกันน้าาา 🥰
+            </p>
+
+            <!-- Music Controller inside Header -->
+            <div class="mt-6 flex justify-center gap-3">
+                <button onclick="toggleMusic()" class="px-4 py-2 bg-pink-100 hover:bg-pink-200 text-pink-600 text-xs md:text-sm font-semibold rounded-full transition-all flex items-center gap-2 shadow-sm border border-pink-200">
+                    <i id="music-icon" class="fa-solid fa-music animate-spin" style="animation-duration: 4s;"></i>
+                    <span id="music-btn-text">เล่นเพลงอวยพรวันเกิด 🎶</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Birthday Countdown Card -->
+        <section class="bg-gradient-to-r from-pink-400 to-rose-500 text-white rounded-3xl p-6 shadow-xl text-center relative overflow-hidden">
+            <div class="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 opacity-10 text-9xl"><i class="fa-solid fa-hourglass-half"></i></div>
+            <h2 class="text-lg md:text-xl font-bold mb-4 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-calendar-heart animate-pulse"></i>
+                <span id="countdown-label">นับถอยหลังสู่วันเกิดคนสำคัญ (7 กรกฎาคม)</span>
+            </h2>
+            <div class="grid grid-cols-4 gap-2 md:gap-4 max-w-md mx-auto">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                    <div id="days" class="text-2xl md:text-4xl font-extrabold">00</div>
+                    <div class="text-[10px] md:text-xs uppercase tracking-wider font-medium opacity-80">วัน</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                    <div id="hours" class="text-2xl md:text-4xl font-extrabold">00</div>
+                    <div class="text-[10px] md:text-xs uppercase tracking-wider font-medium opacity-80">ชั่วโมง</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                    <div id="minutes" class="text-2xl md:text-4xl font-extrabold">00</div>
+                    <div class="text-[10px] md:text-xs uppercase tracking-wider font-medium opacity-80">นาที</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                    <div id="seconds" class="text-2xl md:text-4xl font-extrabold">00</div>
+                    <div class="text-[10px] md:text-xs uppercase tracking-wider font-medium opacity-80">วินาที</div>
+                </div>
+            </div>
+            <p id="countdown-subtext" class="text-xs mt-3 opacity-90"></p>
+        </section>
+
+        <!-- Double Content: Virtual Cake & Love Letter -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Virtual Cake Card -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-pink-100 flex flex-col items-center justify-between text-center relative">
+                <div>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase tracking-wider"><i class="fa-solid fa-fire mr-1"></i> Interactive Cake</span>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mt-2">เป่าเทียนวันเกิดสิคะที่รัก 🎂</h2>
+                    <p class="text-gray-500 text-xs md:text-sm mt-1">คลิกที่เปลวไฟเพื่ออธิษฐานแล้วเป่าเค้กได้เลย!</p>
+                </div>
+
+                <!-- SVG Birthday Cake -->
+                <div class="w-full max-w-[240px] my-6 relative cursor-pointer group" onclick="blowCandle()">
+                    <svg viewBox="0 0 200 200" class="w-full h-auto drop-shadow-md">
+                        <!-- Cake Base Plate -->
+                        <path d="M 20,160 Q 100,180 180,160 L 170,180 Q 100,200 30,180 Z" fill="#ffd1dc" />
+                        <ellipse cx="100" cy="160" rx="80" ry="12" fill="#ffd1dc" />
+                        
+                        <!-- Cake Lower Layer -->
+                        <path d="M 30,110 L 30,150 Q 100,165 170,150 L 170,110 Z" fill="#fff5ee" />
+                        <ellipse cx="100" cy="110" rx="70" ry="10" fill="#fff5ee" />
+                        <ellipse cx="100" cy="150" rx="70" ry="10" fill="#fbc3cb" />
+                        
+                        <!-- Cake Top Layer (Cream & Toppings) -->
+                        <path d="M 45,75 L 45,105 Q 100,115 155,105 L 155,75 Z" fill="#ffb6c1" />
+                        <ellipse cx="100" cy="75" rx="55" ry="8" fill="#ffb6c1" />
+                        <ellipse cx="100" cy="105" rx="55" ry="8" fill="#f89fae" />
+                        
+                        <!-- Dripping Frosting -->
+                        <path d="M 45,75 Q 55,85 65,75 Q 75,88 85,75 Q 95,90 105,75 Q 115,85 125,75 Q 135,88 145,75 Q 155,75 155,75 L 155,80 Q 145,95 135,80 Q 125,95 115,80 Q 105,95 95,80 Q 85,95 75,80 Q 65,95 55,80 L 45,75 Z" fill="#fff" opacity="0.9" />
+                        
+                        <!-- Cute Strawberries / Sprinkles -->
+                        <circle cx="65" cy="74" r="5" fill="#e23c52" />
+                        <circle cx="100" cy="77" r="5" fill="#e23c52" />
+                        <circle cx="135" cy="74" r="5" fill="#e23c52" />
+                        
+                        <!-- Candle 1 -->
+                        <rect x="96" y="45" width="8" height="25" rx="2" fill="#87ceeb" />
+                        <path d="M 96,45 L 104,45 L 104,70 L 96,70 Z" fill="#b0e0e6" opacity="0.5" />
+                        
+                        <!-- Candle Wick -->
+                        <line x1="100" y1="45" x2="100" y2="40" stroke="#333" stroke-width="2" />
+                        
+                        <!-- Flame -->
+                        <g id="candle-flame" class="flame origin-bottom">
+                            <path d="M 100,40 Q 93,30 100,18 Q 107,30 100,40 Z" fill="#ff4500" />
+                            <path d="M 100,40 Q 95,33 100,25 Q 105,33 100,40 Z" fill="#ff9d00" />
+                            <circle cx="100" cy="35" r="2" fill="#ffff00" />
+                        </g>
+                    </svg>
+
+                    <!-- Bubble Prompt over Candle -->
+                    <div id="candle-prompt" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white font-semibold text-xs py-1.5 px-3 rounded-full shadow-lg group-hover:scale-105 transition-transform flex items-center gap-1">
+                        <span>จิ้มตรงนี้เพื่อเป่าเทียน! 🌬️</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 id="cake-wishes-count" class="text-sm font-semibold text-pink-600">อธิษฐานขอพรก่อนนะคะคนเก่ง</h4>
+                    <p class="text-xs text-gray-400 mt-1">หลังจากเป่าเทียน จะมีเซอร์ไพรส์ลอยขึ้นมาจ้า</p>
+                </div>
+            </div>
+
+            <!-- Love Letter Card / Slideshow -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-pink-100 flex flex-col justify-between">
+                <div>
+                    <span class="px-3 py-1 bg-pink-100 text-pink-700 text-xs font-bold rounded-full uppercase tracking-wider"><i class="fa-solid fa-feather-pointed mr-1"></i> Love Message</span>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mt-2">ข้อความพิเศษเพื่อเธอ 💌</h2>
+                    <p class="text-gray-500 text-xs md:text-sm mt-1">ความในใจเล็ก ๆ น้อย ๆ ที่เค้าอยากบอกเธอ</p>
+                </div>
+
+                <!-- Custom Card Slider for Messages -->
+                <div class="my-6 min-h-[140px] flex items-center justify-center relative">
+                    <div id="message-container" class="w-full text-center px-4 space-y-3">
+                        <p id="slide-text" class="text-base text-gray-700 font-medium italic leading-relaxed">"ขอบคุณสำหรับทุก ๆ วันที่คอยอยู่เคียงข้าง และขอบคุณที่เป็นความสุขในชีวิตของกันและกันตลอดมานะคะที่รัก"</p>
+                        <p id="slide-author" class="text-xs text-pink-500 font-bold handwritten text-right">- ด้วยรักจากต้าวแมวโข่งของเธอ 💘</p>
+                    </div>
+                </div>
+
+                <!-- Slider Controls -->
+                <div class="flex items-center justify-between border-t border-pink-50 pt-4">
+                    <button onclick="prevSlide()" class="w-9 h-9 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-600 transition-colors flex items-center justify-center shadow-inner">
+                        <i class="fa-solid fa-chevron-left text-sm"></i>
+                    </button>
+                    <div class="flex gap-1.5" id="slide-dots">
+                        <!-- Dots populated dynamically -->
+                    </div>
+                    <button onclick="nextSlide()" class="w-9 h-9 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-600 transition-colors flex items-center justify-center shadow-inner">
+                        <i class="fa-solid fa-chevron-right text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Love Coupons Section -->
+        <section class="bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-pink-100">
+            <div class="text-center mb-6">
+                <span class="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full uppercase tracking-wider"><i class="fa-solid fa-ticket mr-1"></i> Exclusive Perks</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mt-2">คูปองวิเศษตามใจคุณแฟน 🎁</h2>
+                <p class="text-gray-500 text-xs md:text-sm mt-1">สามารถเลือกแลกสิทธิ์ใช้งานกับคนอวยพรได้ตามต้องการเลยนะจ๊ะ!</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <!-- Coupon 1 -->
+                <div id="coupon-1" onclick="scratchCoupon(1)" class="relative h-44 bg-gradient-to-br from-pink-400 to-rose-400 rounded-2xl shadow-md cursor-pointer overflow-hidden flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-white/40 group transition-all duration-300 hover:scale-[1.03]">
+                    <!-- Scratch Overlay / Cover -->
+                    <div id="coupon-cover-1" class="absolute inset-0 bg-gradient-to-br from-gray-300 via-pink-200 to-gray-400 flex flex-col items-center justify-center p-4 transition-all duration-500 z-10">
+                        <i class="fa-solid fa-gift text-white text-3xl mb-1 drop-shadow animate-bounce"></i>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider bg-black/10 px-2 py-0.5 rounded">กดขูดคูปอง 🎁</span>
+                    </div>
+                    <!-- Coupon Content -->
+                    <div class="text-white space-y-1">
+                        <div class="text-xs font-extrabold uppercase tracking-widest bg-white/20 py-1 px-3 rounded-full inline-block">Love Ticket</div>
+                        <h4 id="coupon-title-1" class="text-lg font-bold">บุฟเฟต์ปิ้งย่างมื้อพิเศษ 🥩</h4>
+                        <p class="text-[10px] opacity-90">ตั๋วตามใจแฟน พาไปกินบุฟเฟต์ปิ้งย่างที่เธอชอบ ฟรี 1 มื้อ!</p>
+                        <p class="text-[10px] font-bold text-rose-100 mt-2">✨ ใช้สิทธิ์ได้ทุกวันตลอดปีนี้ ✨</p>
+                    </div>
+                </div>
+
+                <!-- Coupon 2 -->
+                <div id="coupon-2" onclick="scratchCoupon(2)" class="relative h-44 bg-gradient-to-br from-purple-400 to-pink-400 rounded-2xl shadow-md cursor-pointer overflow-hidden flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-white/40 group transition-all duration-300 hover:scale-[1.03]">
+                    <!-- Scratch Overlay / Cover -->
+                    <div id="coupon-cover-2" class="absolute inset-0 bg-gradient-to-br from-gray-300 via-purple-200 to-gray-400 flex flex-col items-center justify-center p-4 transition-all duration-500 z-10">
+                        <i class="fa-solid fa-wand-magic-sparkles text-white text-3xl mb-1 drop-shadow animate-bounce"></i>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider bg-black/10 px-2 py-0.5 rounded">กดขูดคูปอง 🎁</span>
+                    </div>
+                    <!-- Coupon Content -->
+                    <div class="text-white space-y-1">
+                        <div class="text-xs font-extrabold uppercase tracking-widest bg-white/20 py-1 px-3 rounded-full inline-block">Sweet Ticket</div>
+                        <h4 id="coupon-title-2" class="text-lg font-bold">ตั๋วหอมแก้ม 100 ครั้ง 😘</h4>
+                        <p class="text-[10px] opacity-90">คูปองแลกรับการหอมแก้มหรือกอดได้แบบจุใจ ห้ามบ่น ห้ามปฏิเสธ!</p>
+                        <p class="text-[10px] font-bold text-purple-100 mt-2">✨ แลกรับเมื่อไหร่ก็ได้ตามต้องการ ✨</p>
+                    </div>
+                </div>
+
+                <!-- Coupon 3 -->
+                <div id="coupon-3" onclick="scratchCoupon(3)" class="relative h-44 bg-gradient-to-br from-teal-400 to-emerald-400 rounded-2xl shadow-md cursor-pointer overflow-hidden flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-white/40 group transition-all duration-300 hover:scale-[1.03]">
+                    <!-- Scratch Overlay / Cover -->
+                    <div id="coupon-cover-3" class="absolute inset-0 bg-gradient-to-br from-gray-300 via-teal-200 to-gray-400 flex flex-col items-center justify-center p-4 transition-all duration-500 z-10">
+                        <i class="fa-solid fa-star text-white text-3xl mb-1 drop-shadow animate-bounce"></i>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider bg-black/10 px-2 py-0.5 rounded">กดขูดคูปอง 🎁</span>
+                    </div>
+                    <!-- Coupon Content -->
+                    <div class="text-white space-y-1">
+                        <div class="text-xs font-extrabold uppercase tracking-widest bg-white/20 py-1 px-3 rounded-full inline-block">Special Ticket</div>
+                        <h4 id="coupon-title-3" class="text-lg font-bold">ตั๋วสายเขียวที่เธอชอบ 🥰</h4>
+                        <p class="text-[10px] opacity-90">แลกรับมัจฉะลาเต้ร้านไหนก็ได้ ฟรี 1 แก้ว</p>
+                        <p class="text-[10px] font-bold text-teal-100 mt-2">✨ เค้าจ่ายให้เอง ✨</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-center text-xs text-gray-400 mt-4"><i class="fa-solid fa-circle-info"></i> เมื่อเปิดครบ 3 ใบ จะได้รับรางวัลชิ้นใหญ่พิเศษท้ายหน้านะจ้า!</p>
+        </section>
+
+        <!-- Dynamic Congratulations Section (Unlocked after coupons) -->
+        <section id="final-gift" class="hidden bg-white/95 rounded-3xl p-6 md:p-10 shadow-xl border-4 border-dashed border-pink-400 text-center space-y-6 transition-all duration-1000 transform translate-y-4">
+            <div class="w-20 h-20 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner animate-pulse">
+                <i class="fa-solid fa-gift"></i>
+            </div>
+            <div class="space-y-2">
+                <span class="text-xs font-bold text-pink-500 uppercase tracking-widest bg-pink-50 py-1 px-3 rounded-full">Super Unlocked Prize</span>
+                <h3 class="text-2xl md:text-3xl font-extrabold text-pink-600">ของขวัญพิเศษชิ้นสุดท้ายจากใจ! 🎉</h3>
+                <p class="text-gray-600 text-sm md:text-base max-w-lg mx-auto">
+                    ขอสัญญาว่าจะคอยเป็นแฟนที่ดี คอยดูแลเอาใจใส่เธอแบบนี้ และรักเธอให้มากขึ้นในทุก ๆ วันนะคะ มาร่วมสร้างความทรงจำแสนพิเศษด้วยกันอีกเยอะ ๆ เลยนะคนเก่งของเค้า 🥰
+                </p>
+            </div>
+            <div class="inline-flex flex-col md:flex-row gap-4 justify-center items-center w-full">
+                <button onclick="blastConfetti()" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-heart-circle-check"></i>
+                    <span>กดจุดพลุฉลองร่วมกัน! 🎉</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Customizer Widget Control: Slide out / Drawer -->
+    <div id="customizer-drawer" class="fixed right-0 top-[20%] z-40 bg-white shadow-2xl rounded-l-2xl border-y-2 border-l-2 border-pink-200 transition-all duration-300 transform translate-x-full w-[280px]">
+        <!-- Pull Tab Button -->
+        <button onclick="toggleCustomizer()" class="absolute -left-12 top-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2.5 px-3 rounded-l-xl shadow-lg flex flex-col items-center justify-center gap-1">
+            <i id="customizer-toggle-icon" class="fa-solid fa-cog animate-spin" style="animation-duration: 10s;"></i>
+            <span class="text-[9px] uppercase tracking-wider [writing-mode:vertical-lr] rotate-180">ตั้งค่าการ์ด</span>
+        </button>
+
+        <div class="p-5 h-[60vh] overflow-y-auto space-y-4">
+            <h3 class="font-bold text-pink-600 border-b border-pink-100 pb-2 text-base flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic"></i>
+                เครื่องมือปรับแต่งการ์ด
+            </h3>
+            <p class="text-[11px] text-gray-500">คุณสามารถปรับแต่งหน้าเว็บนี้เพื่อส่งพรีวิวหรือส่งต่อให้แฟนของคุณได้เลย!</p>
+            
+            <!-- Input Partner's Name -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ชื่อเล่นคุณแฟน:</label>
+                <input type="text" id="custom-name" value="สุดที่รัก" oninput="updateCustomData()" class="w-full text-xs px-3 py-2 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none">
+            </div>
+
+            <!-- Input Date -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">วันเกิดของแฟน:</label>
+                <input type="date" id="custom-date" value="2026-07-07" onchange="updateCustomData()" class="w-full text-xs px-3 py-2 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none">
+            </div>
+
+            <!-- Custom Message 1 -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ความในใจ 1:</label>
+                <textarea id="custom-msg-1" oninput="updateCustomData()" class="w-full text-xs px-3 py-1.5 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none h-14 resize-none">ขอบคุณสำหรับทุก ๆ วันที่คอยอยู่เคียงข้าง และขอบคุณที่เป็นความสุขในชีวิตของกันและกันเสมอนะ</textarea>
+            </div>
+
+            <!-- Custom Message 2 -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ความในใจ 2:</label>
+                <textarea id="custom-msg-2" oninput="updateCustomData()" class="w-full text-xs px-3 py-1.5 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none h-14 resize-none">อยากขอให้เธอมีความสุข มีแต่รอยยิ้มที่งดงามในทุกก้าวเดิน ไม่ว่าจะเจออะไรเค้าพร้อมอยู่ตรงนี้เสมอนะคะ</textarea>
+            </div>
+
+            <!-- Custom Message 3 -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ความในใจ 3:</label>
+                <textarea id="custom-msg-3" oninput="updateCustomData()" class="w-full text-xs px-3 py-1.5 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none h-14 resize-none">สุขสันต์วันเกิดคนดีของเค้า รักษาสุขภาพดี ๆ และอยู่เป็นความน่ารักของเค้าไปยาว ๆ เลยนะ รักเธอที่สุดเลยยยย 💖</textarea>
+            </div>
+
+            <!-- Custom Coupon 1 -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ชื่อคูปองใบที่ 1:</label>
+                <input type="text" id="custom-coupon-1" value="บุฟเฟต์ปิ้งย่างมื้อพิเศษ 🥩" oninput="updateCustomData()" class="w-full text-xs px-3 py-2 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none">
+            </div>
+
+            <!-- Custom Coupon 2 -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ชื่อคูปองใบที่ 2:</label>
+                <input type="text" id="custom-coupon-2" value="ตั๋วหอมแก้ม 100 ครั้ง 😘" oninput="updateCustomData()" class="w-full text-xs px-3 py-2 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none">
+            </div>
+
+            <!-- Custom Coupon 3 -->
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-700">ชื่อคูปองใบที่ 3:</label>
+                <input type="text" id="custom-coupon-3" value="ตั๋วสลับบทบาท! วันนี้ตามใจเค้าบ้างนะ 🔄" oninput="updateCustomData()" class="w-full text-xs px-3 py-2 border rounded-lg focus:ring-1 focus:ring-pink-400 outline-none">
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full py-6 mt-8 text-center text-xs text-pink-400/80">
+        <p>© 2026 - สุขสันต์วันเกิดนะแฟนสุดที่รัก 💖 ผลิตขึ้นมาด้วยความรักทั้งหมดที่มี</p>
+    </footer>
+
+    <script>
+        // Set up custom birthday melody using Tone.js to avoid issues loading external audio resources
+        let synth = null;
+        let isPlayingMusic = false;
+        let melodyLoop = null;
+
+        function initSynth() {
+            if (!synth) {
+                // High-quality polyphonic synthesizer for cozy retro vibes
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: {
+                        attack: 0.1,
+                        decay: 0.2,
+                        sustain: 0.6,
+                        release: 0.8
+                    }
+                }).toDestination();
+                synth.volume.value = -12; // Lower volume slightly
+            }
+        }
+
+        // Happy Birthday Melody Representation
+        const bdayMelody = [
+            { note: "C4", duration: "8n", time: 0 },
+            { note: "C4", duration: "8n", time: "0:2" },
+            { note: "D4", duration: "4n", time: "0:4" },
+            { note: "C4", duration: "4n", time: "0:8" },
+            { note: "F4", duration: "4n", time: "0:12" },
+            { note: "E4", duration: "2n", time: "1:0" },
+
+            { note: "C4", duration: "8n", time: "2:0" },
+            { note: "C4", duration: "8n", time: "2:2" },
+            { note: "D4", duration: "4n", time: "2:4" },
+            { note: "C4", duration: "4n", time: "2:8" },
+            { note: "G4", duration: "4n", time: "2:12" },
+            { note: "F4", duration: "2n", time: "3:0" },
+
+            { note: "C4", duration: "8n", time: "4:0" },
+            { note: "C4", duration: "8n", time: "4:2" },
+            { note: "C5", duration: "4n", time: "4:4" },
+            { note: "A4", duration: "4n", time: "4:8" },
+            { note: "F4", duration: "4n", time: "4:12" },
+            { note: "E4", duration: "4n", time: "5:0" },
+            { note: "D4", duration: "2n", time: "5:4" },
+
+            { note: "A#4", duration: "8n", time: "6:0" },
+            { note: "A#4", duration: "8n", time: "6:2" },
+            { note: "A4", duration: "4n", time: "6:4" },
+            { note: "F4", duration: "4n", time: "6:8" },
+            { note: "G4", duration: "4n", time: "6:12" },
+            { note: "F4", duration: "2n", time: "7:0" }
+        ];
+
+        function playBirthdayMelody() {
+            initSynth();
+            Tone.start();
+            
+            if (melodyLoop) {
+                melodyLoop.dispose();
+            }
+
+            // Create loop structure
+            const part = new Tone.Part((time, value) => {
+                synth.triggerAttackRelease(value.note, value.duration, time);
+            }, bdayMelody);
+            
+            part.loop = true;
+            part.loopEnd = "8m";
+            part.start(0);
+            
+            Tone.Transport.start();
+            melodyLoop = part;
+            isPlayingMusic = true;
+            updateMusicButtonUI();
+        }
+
+        function toggleMusic() {
+            if (isPlayingMusic) {
+                Tone.Transport.stop();
+                isPlayingMusic = false;
+            } else {
+                playBirthdayMelody();
+            }
+            updateMusicButtonUI();
+        }
+
+        function updateMusicButtonUI() {
+            const btnText = document.getElementById('music-btn-text');
+            const icon = document.getElementById('music-icon');
+            if (isPlayingMusic) {
+                btnText.textContent = "ปิดเสียงเพลงอวยพร 🤫";
+                icon.classList.add('animate-spin');
+            } else {
+                btnText.textContent = "เล่นเพลงอวยพรวันเกิด 🎶";
+                icon.classList.remove('animate-spin');
+            }
+        }
+
+        // Data and State Configurations
+        let partnerName = "สุดที่รัก";
+        let targetBirthdayDate = new Date("2026-07-07T00:00:00");
+        let activeSlideIndex = 0;
+        let messages = [
+            "ขอบคุณสำหรับทุก ๆ วันที่คอยอยู่เคียงข้าง และขอบคุณที่เป็นความสุขในชีวิตของกันและกันเสมอนะ",
+            "อยากขอให้เธอมีความสุข มีแต่รอยยิ้มที่งดงามในทุกก้าวเดิน ไม่ว่าจะเจออะไรเค้าพร้อมอยู่ตรงนี้เสมอนะคะ",
+            "สุขสันต์วันเกิดคนดีของเค้า รักษาสุขภาพดี ๆ และอยู่เป็นความน่ารักของเค้าไปยาว ๆ เลยนะ รักเธอที่สุดเลยยยย 💖"
+        ];
+        let scratchedCoupons = new Set();
+        let candleBlown = false;
+
+        // On window load setup
+        window.onload = function() {
+            createFloatingHearts();
+            setupCarousel();
+            startCountdown();
+            
+            // Check current date to set the correct countdown label
+            const now = new Date();
+            const year = now.getFullYear();
+            document.getElementById('custom-date').value = `${year}-07-07`;
+            updateCustomData();
+        };
+
+        // UI Event logic to open gift
+        function openGift() {
+            // Blast confetti immediately on open
+            blastConfetti();
+            
+            // Un-hide main content & fade intro
+            const intro = document.getElementById('intro-screen');
+            const main = document.getElementById('main-content');
+            
+            intro.classList.add('opacity-0');
+            setTimeout(() => {
+                intro.classList.add('hidden');
+                main.classList.remove('hidden');
+                setTimeout(() => {
+                    main.classList.add('opacity-100');
+                    // Automatically trigger custom sound setup
+                    playBirthdayMelody();
+                }, 50);
+            }, 1000);
+        }
+
+        // Multi-layered visual explosion of hearts and confetti sparkles
+        function blastConfetti() {
+            const colors = ['#ff69b4', '#ffb6c1', '#ff1493', '#ffd700', '#ba55d3'];
+            
+            // Center burst
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: colors
+            });
+
+            // Side bursts
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: colors
+                });
+            }, 250);
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: colors
+                });
+            }, 400);
+        }
+
+        // Cute ambient floating heart particles generator
+        function createFloatingHearts() {
+            const container = document.getElementById('hearts-container');
+            const icons = ['fa-heart', 'fa-sparkles', 'fa-gift', 'fa-face-kiss-wink-heart'];
+            
+            setInterval(() => {
+                const particle = document.createElement('div');
+                particle.className = 'heart-particle text-pink-300/30';
+                
+                // Random position & properties
+                const xPos = Math.random() * 100;
+                const size = Math.random() * 20 + 10;
+                const delay = Math.random() * 5;
+                const duration = Math.random() * 4 + 4;
+                const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+                
+                particle.style.left = `${xPos}vw`;
+                particle.style.bottom = `-50px`;
+                particle.style.fontSize = `${size}px`;
+                particle.style.animationDelay = `${delay}s`;
+                particle.style.animationDuration = `${duration}s`;
+                particle.innerHTML = `<i class="fa-solid ${randomIcon}"></i>`;
+                
+                container.appendChild(particle);
+                
+                // Remove particle when finished animating
+                setTimeout(() => {
+                    particle.remove();
+                }, (delay + duration) * 1000);
+            }, 600);
+        }
+
+        // Countdown Timer Loop logic
+        let countdownInterval;
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            const daysE = document.getElementById('days');
+            const hoursE = document.getElementById('hours');
+            const minsE = document.getElementById('minutes');
+            const secsE = document.getElementById('seconds');
+            const subtext = document.getElementById('countdown-subtext');
+
+            function updateTime() {
+                const now = new Date();
+                let diff = targetBirthdayDate - now;
+
+                if (diff <= 0) {
+                    // It's the birthday!
+                    daysE.textContent = "00";
+                    hoursE.textContent = "00";
+                    minsE.textContent = "00";
+                    secsE.textContent = "00";
+                    subtext.textContent = `🎉 วันนี้เป็นวันเกิดสุดวิเศษของ ${partnerName} แล้วนะ! ขอให้เธอแฮปปี้ที่สุดเลยยย 🎉`;
+                    blastConfetti();
+                    return;
+                }
+
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                daysE.textContent = d.toString().padStart(2, '0');
+                hoursE.textContent = h.toString().padStart(2, '0');
+                minsE.textContent = m.toString().padStart(2, '0');
+                secsE.textContent = s.toString().padStart(2, '0');
+
+                subtext.textContent = `ตื่นเต้น ๆ อีกไม่นานก็จะถึงวันเกิดสุดพิเศษของ ${partnerName} แล้วนะจ๊ะ 💕`;
+            }
+
+            updateTime();
+            countdownInterval = setInterval(updateTime, 1000);
+        }
+
+        // Blow Candle visual triggers
+        function blowCandle() {
+            if (candleBlown) return;
+
+            const flame = document.getElementById('candle-flame');
+            const prompt = document.getElementById('candle-prompt');
+            const text = document.getElementById('cake-wishes-count');
+
+            // Play wind blow chime sound via synth
+            if (synth) {
+                synth.triggerAttackRelease(["C5", "E5", "G5"], "2n");
+            }
+
+            // Animate flame out
+            flame.style.transition = "transform 0.5s ease";
+            flame.style.transform = "scale(0)";
+            candleBlown = true;
+            
+            // Update prompts
+            prompt.innerHTML = "🎂 เป่าเค้กสำเร็จแล้วจ้า!";
+            prompt.className = "absolute -top-4 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white font-semibold text-xs py-1.5 px-3 rounded-full shadow-lg";
+            text.innerHTML = "✨ พรทุกข้อที่ขอจงสมปรารถนานะคะคนดี ✨";
+            text.className = "text-sm font-bold text-emerald-600 animate-bounce mt-2";
+
+            // Explode confetti
+            blastConfetti();
+        }
+
+        // Carousel Slider Logics
+        function setupCarousel() {
+            const dotContainer = document.getElementById('slide-dots');
+            dotContainer.innerHTML = '';
+            
+            messages.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.className = `w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === activeSlideIndex ? 'bg-pink-500 w-6' : 'bg-pink-200'}`;
+                dot.onclick = () => goToSlide(i);
+                dotContainer.appendChild(dot);
+            });
+            
+            updateSlideUI();
+        }
+
+        function goToSlide(index) {
+            activeSlideIndex = index;
+            setupCarousel();
+        }
+
+        function nextSlide() {
+            activeSlideIndex = (activeSlideIndex + 1) % messages.length;
+            setupCarousel();
+        }
+
+        function prevSlide() {
+            activeSlideIndex = (activeSlideIndex - 1 + messages.length) % messages.length;
+            setupCarousel();
+        }
+
+        function updateSlideUI() {
+            const slideText = document.getElementById('slide-text');
+            const slideAuthor = document.getElementById('slide-author');
+            
+            slideText.style.opacity = 0;
+            setTimeout(() => {
+                slideText.textContent = `"${messages[activeSlideIndex]}"`;
+                slideAuthor.textContent = `- ด้วยรักจากต้าวแมวโข่งของเธอ 💘`;
+                slideText.style.opacity = 1;
+            }, 150);
+        }
+
+        // Coupons interactive logic
+        function scratchCoupon(id) {
+            const cover = document.getElementById(`coupon-cover-${id}`);
+            if (cover) {
+                // Reveal transition
+                cover.style.transform = "translateY(-100%)";
+                cover.style.opacity = "0";
+                scratchedCoupons.add(id);
+                
+                // Audio response
+                if (synth) {
+                    synth.triggerAttackRelease("G5", "8n");
+                }
+
+                // Check final state
+                if (scratchedCoupons.size === 3) {
+                    const finalGift = document.getElementById('final-gift');
+                    finalGift.classList.remove('hidden');
+                    setTimeout(() => {
+                        finalGift.classList.remove('translate-y-4');
+                        finalGift.classList.add('translate-y-0');
+                        // Big blast
+                        blastConfetti();
+                    }, 100);
+                }
+            }
+        }
+
+        // Sidebar customizer panel control
+        let isCustomizerOpen = false;
+        function toggleCustomizer() {
+            const drawer = document.getElementById('customizer-drawer');
+            const toggleIcon = document.getElementById('customizer-toggle-icon');
+            if (isCustomizerOpen) {
+                drawer.classList.add('translate-x-full');
+                toggleIcon.classList.remove('rotate-45');
+            } else {
+                drawer.classList.remove('translate-x-full');
+                toggleIcon.classList.add('rotate-45');
+            }
+            isCustomizerOpen = !isCustomizerOpen;
+        }
+
+        // Live update custom modifications instantly on screen
+        function updateCustomData() {
+            // Read values
+            partnerName = document.getElementById('custom-name').value || "สุดที่รัก";
+            const dateStr = document.getElementById('custom-date').value;
+            if (dateStr) {
+                targetBirthdayDate = new Date(`${dateStr}T00:00:00`);
+            }
+
+            messages[0] = document.getElementById('custom-msg-1').value;
+            messages[1] = document.getElementById('custom-msg-2').value;
+            messages[2] = document.getElementById('custom-msg-3').value;
+
+            // Apply updates to UI
+            document.getElementById('intro-partner-name-display').innerHTML = `ถึง ${partnerName} สุดที่รัก ❤️`;
+            document.getElementById('partner-name-display-main').textContent = partnerName;
+            
+            // Format labels
+            const formattedDate = targetBirthdayDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long' });
+            document.getElementById('countdown-label').textContent = `นับถอยหลังสู่วันเกิดคนสำคัญ (${formattedDate})`;
+
+            // Coupons update
+            document.getElementById('coupon-title-1').textContent = document.getElementById('custom-coupon-1').value;
+            document.getElementById('coupon-title-2').textContent = document.getElementById('custom-coupon-2').value;
+            document.getElementById('coupon-title-3').textContent = document.getElementById('custom-coupon-3').value;
+
+            // Refresh countdown & Carousel state
+            startCountdown();
+            updateSlideUI();
+        }
+
+        // Avatar Image Upload
+        function uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return; // Prevent crash when user cancels the image picker
+
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('partner-avatar');
+                output.src = reader.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
